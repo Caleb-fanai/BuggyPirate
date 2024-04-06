@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v2  # Updated to use setup-node action
         with:
-          node-version: '14'  # Updated Node.js version to 14 as recommended
+          node-version: '20'  # Updated Node.js version to as recommended
 
       - uses: actions/checkout@v2
         with:
