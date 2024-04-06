@@ -1,40 +1,35 @@
-name: CI
+
+name: Build App
+
 on:
   push:
-    branches: [ master ]  # Updated branch name from 'master' to 'main'
+    branches:
+      - master  # Trigger the workflow on changes to the master branch
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-node@v3  # Updated to use setup-node action
-        with:
-          node-version: '20'  # Updated Node.js version to as recommended
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          ref: main  # Set the branch explicitly to 'main'
+          python-version: '3.x'  # Specify your Python version
 
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v3
-        with:
-          path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install cython==0.29.21
+          pip install kivy_deps.sdl2==0.1.* kivy_deps.glew==0.1.*
+          pip install kivy==2.0.0
 
-      - uses: actions/cache@v3
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-${{ github.run_number }}-${{ hashFiles('buildozer.spec') }}
-
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer android debug
-          buildozer_version: master
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+      - name: Build app
+        run: |
+          python main.py  # Replace 'main.py' with your app's main file
+          # Optionally, you can package the app using buildozer or pyinstaller here
