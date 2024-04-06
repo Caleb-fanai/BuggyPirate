@@ -1,35 +1,57 @@
-
-name: Build App
-
+name: Build (with Buildozer master)
 on:
   push:
-    branches:
-      - master  # Trigger the workflow on changes to the master branch
+    branches-ignore:
+      - data
+      - gh-pages
+    tags:
+      - '**'
   pull_request:
-    branches:
-      - master
+    branches-ignore:
+      - data
+      - gh-pages
+  schedule:
+      - cron: 0 0 */4 * * # at 00:00 UTC every fourth day
 
 jobs:
-  build:
+  # Build job. Builds app for Android with Buildozer
+  build-android:
+    name: Build for Android (with Buildozer master)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: master
+
+      - name: Build with Buildozer
+        uses: ./master # REPLACE WITH ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          repository_root: master
+          workdir: test_app
+          buildozer_version: master
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: data
+          ref: data # Branch name
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'  # Specify your Python version
+          python-version: 3.7
+          architecture: x64
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install cython==0.29.21
-          pip install kivy_deps.sdl2==0.1.* kivy_deps.glew==0.1.*
-          pip install kivy==2.0.0
-
-      - name: Build app
-        run: |
-          python main.py  # Replace 'main.py' with your app's main file
-          # Optionally, you can package the app using buildozer or pyinstaller here
+      - name: Push binary to data branch
+        if: github.event_name == 'push'
+        run: python master/.ci/move_binary.py "${{ steps.buildozer.outputs.filename }}" master data bin-with-master
+        
