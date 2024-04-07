@@ -1,7 +1,7 @@
 ☠️This BuggyPirate is still in development
 
-This is a photo stealer only
-The Buggyapp will be converted to an apk
+This is a photo stealer only,
+The Buggyapp will be converted to an apk soon
 
 
 You need to specify the photo path of your victim in the retry.py file
